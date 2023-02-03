@@ -1,0 +1,10 @@
+[
+    {
+        "type0": "production",
+        "server": "localhost\\SQLEXPRESS",
+        "instance": "\\SQLEXPRESS",
+        "user": "Profit",
+        "pass": "profit",
+        "database": "JBP_A"
+    }
+]

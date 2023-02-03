@@ -1,0 +1,11 @@
+# Deshabilitar el indexado de directorios 
+Options -Indexes
+
+# Generar y activar diferentes URLs
+#Options +FollowSymLinks -MultiViews 
+
+# Permitir reescribir las direcciones
+#RewriteEngine On
+
+# Reenviar todo el trafico que entre a la carpeta alumnos hacia el archivo alumnos.php
+#RewriteRule ^([A-Za-z0-9]*)$ controlador.php?parametros=$1
