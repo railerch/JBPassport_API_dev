@@ -24,10 +24,42 @@ class Proceso
         $d = date('d');
 
         if ($usuario == 'root' && $clave == 'r007_' . $d) {
-            $_SESSION['admin'] = true;
-            return ['st' => 1, 'sesion' => 'admin'];
+            return ['st' => 1, 'ses' => 'adm', 'usr' => 'root', 'nam' => 'Administrador'];
+        } else if ($usuario != 'root') {
+            // Si no es el usuario root se procesan las credenciales para determinar si el usuario es administrativo o cliente
+            $usuario    = strtoupper($data['usuario']);
+
+            try {
+                // Consultar vendedores
+                $stmt_ven   = $this->conn->query("SELECT co_ven, ven_des, login, password, email, condic FROM vendedor WHERE login = '$usuario'");
+                $ven        = $stmt_ven->fetch(PDO::FETCH_ASSOC);
+
+                if ($ven) {
+                    if ($clave == trim($ven['password'])) {
+                        // Si la clave es correcta se envian los datos necesarios para la sesion
+                        return ['st' => 1, 'ses' => 'adm', 'usr' => $usuario, 'nam' => trim($ven['ven_des']), 'coVen' => trim($ven['co_ven'])];
+                    } else {
+                        return ['st' => 400, 'ses' => false];
+                    }
+                } else {
+                    // Consultar clientes
+                    $stmt_cli   = $this->conn->query("SELECT co_cli, cli_des, login, Password, co_ven, inactivo FROM clientes WHERE login = '$usuario' ");
+                    $cli        = $stmt_cli->fetch(PDO::FETCH_ASSOC);
+
+                    if ($cli) {
+                        if ($clave == trim($cli['password'])) {
+                            // Si la clave es correcta se envian los datos necesarios para la sesion
+                            return ['st' => 2, 'ses' => 'cli', 'usr' => $usuario, 'nam' => trim($cli['cli_des']), 'coCli' => $cli['co_cli'], 'coVen' => trim($cli['co_ven']), 'inactivo' => $cli['inactivo']];
+                        } else {
+                            return ['st' => 400, 'ses' => false];
+                        }
+                    }
+                }
+            } catch (PDOException $e) {
+                return "HA OCURRIDO UN ERROR: " . $e->getMessage();
+            }
         } else {
-            return ['st' => 400, 'sesion' => false];
+            return ['st' => 400, 'ses' => false];
         }
     }
 
@@ -35,10 +67,14 @@ class Proceso
     {
     }
 
-    public function consultar_clientes()
+    public function consultar_clientes(array $data)
     {
+
+        // Activar filtro de vendedor si esta incluido
+        $filtro = isset($data['coVen']) ? "WHERE co_ven LIKE '" . trim($data['coVen']) . "%'" : NULL;
+
         try {
-            $stmt   = $this->conn->query("SELECT co_cli, cli_des, login, Password, co_ven, inactivo FROM clientes");
+            $stmt   = $this->conn->query("SELECT co_cli, cli_des, login, Password, co_ven, inactivo FROM clientes $filtro ");
             $row    = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $row;
         } catch (PDOException $e) {

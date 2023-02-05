@@ -52,16 +52,16 @@ if (!isset($_SERVER['PHP_AUTH_USER'])) {
             // ENVIAR RESPUESTA
             if ($respuesta) {
                 http_response_code(200);
-                echo json_encode(['codigoHTTP' => 200, 'res' => $respuesta]);
+                echo json_encode(['codigoHTTP' => 200, 'dat' => $respuesta]);
             } else {
                 http_response_code(400);
                 header('HTTP/1.1 400 consulta invalida, el parametro indicado no arrojo ningun resultado.');
-                echo json_encode(['codigoHTTP' => 400, 'res' => '(HTTP 400) consulta invalida, el parametro indicado no arrojo ningun resultado.']);
+                echo json_encode(['codigoHTTP' => 400, 'dat' => '(HTTP 400) consulta invalida, el parametro indicado no arrojo ningun resultado.']);
             }
         } else {
             http_response_code(400);
             header('HTTP/1.1 400 consulta invalida, los parametro no pueden estar vacios.');
-            echo json_encode(['codigoHTTP' => 400, 'res' => '(HTTP 400) consulta invalida, los parametro no pueden estar vacios.']);
+            echo json_encode(['codigoHTTP' => 400, 'dat' => '(HTTP 400) consulta invalida, los parametro no pueden estar vacios.']);
         }
     } else {
         header('WWW-Authenticate: Basic realm="Acceso no autorizado, credenciales incorrectas.');
