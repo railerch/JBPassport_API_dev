@@ -36,7 +36,8 @@ class Proceso
 
                 if ($ven) {
                     if ($clave == trim($ven['password'])) {
-                        // Si la clave es correcta se envian los datos necesarios para la sesion
+                        // Si la clave es correcta se actualiza el estatus y se envian los datos necesarios para la sesion
+                        $this->actualizar_estatus_sesion('online', 'co_ven', $ven['co_ven']);
                         return ['st' => 1, 'ses' => 'adm', 'usr' => $usuario, 'nam' => trim($ven['ven_des']), 'coVen' => trim($ven['co_ven'])];
                     } else {
                         return ['st' => 400, 'ses' => false];
@@ -48,7 +49,8 @@ class Proceso
 
                     if ($cli) {
                         if ($clave == trim($cli['password'])) {
-                            // Si la clave es correcta se envian los datos necesarios para la sesion
+                            // Si la clave es correcta se actualiza el estatus y se envian los datos necesarios para la sesion
+                            $this->actualizar_estatus_sesion('online', 'co_cli', $cli['co_cli'],);
                             return ['st' => 2, 'ses' => 'cli', 'usr' => $usuario, 'nam' => trim($cli['cli_des']), 'coCli' => $cli['co_cli'], 'coVen' => trim($cli['co_ven']), 'inactivo' => $cli['inactivo']];
                         } else {
                             return ['st' => 400, 'ses' => false];
@@ -65,6 +67,11 @@ class Proceso
 
     public function cerrar_sesion(array $data)
     {
+        $cod = $data['co-usr'];
+        $col = $data['col'];
+        $res = $this->actualizar_estatus_sesion('offline', $col, $cod);
+
+        return json_encode(["stmt" => $res]);
     }
 
     public function consultar_clientes(array $data)
@@ -74,7 +81,7 @@ class Proceso
         $filtro = isset($data['coVen']) ? "WHERE co_ven LIKE '" . trim($data['coVen']) . "%'" : NULL;
 
         try {
-            $stmt   = $this->conn->query("SELECT co_cli, cli_des, login, Password, co_ven, inactivo FROM clientes $filtro ");
+            $stmt   = $this->conn->query("SELECT co_cli, cli_des, login, Password, co_ven, inactivo, campo1 FROM clientes $filtro ");
             $row    = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $row;
         } catch (PDOException $e) {
@@ -87,7 +94,7 @@ class Proceso
         $coCli = $datos['coCli'];
 
         try {
-            $stmt   = $this->conn->query("SELECT co_cli, cli_des, login, Password, co_ven, inactivo FROM clientes WHERE co_cli = '$coCli'");
+            $stmt   = $this->conn->query("SELECT co_cli, cli_des, login, Password, co_ven, inactivo, campo1 FROM clientes WHERE co_cli = '$coCli'");
             $row    = $stmt->fetch(PDO::FETCH_ASSOC);
             return $row;
         } catch (PDOException $e) {
@@ -98,7 +105,7 @@ class Proceso
     public function consultar_vendedores()
     {
         try {
-            $stmt   = $this->conn->query("SELECT co_ven, ven_des, login, password, email, condic FROM vendedor");
+            $stmt   = $this->conn->query("SELECT co_ven, ven_des, login, password, email, condic, campo1 FROM vendedor");
             $row    = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $row;
         } catch (PDOException $e) {
@@ -129,6 +136,17 @@ class Proceso
         try {
             $this->conn->query("UPDATE vendedor SET login= '$login', Password='$pass' WHERE co_ven = '$coVen'");
             return 'Datos actualizados';
+        } catch (PDOException $e) {
+            return "HA OCURRIDO UN ERROR: " . $e->getMessage();
+        }
+    }
+
+    private function actualizar_estatus_sesion($estatus, $col, $cod)
+    {
+
+        try {
+            $this->conn->query("UPDATE clientes SET campo1='$estatus' WHERE $col = '$cod'");
+            return true;
         } catch (PDOException $e) {
             return "HA OCURRIDO UN ERROR: " . $e->getMessage();
         }
